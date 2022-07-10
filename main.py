@@ -5,7 +5,7 @@ import gi
 
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib
-from OpenGL import GL, GLX
+from OpenGL import GL
 from mpv import MPV, MpvGlGetProcAddressFn, MpvRenderContext
 
 
@@ -35,13 +35,9 @@ class MyRenderer(Gtk.GLArea):
         self.set_auto_render(False)
         self.connect("realize", self.on_realize)
 
-        def _get_process_address(_, name):
-            address = GLX.glXGetProcAddress(name.decode("utf-8"))
-            return ctypes.cast(address, ctypes.c_void_p).value
-
         self._mpv = MPV(vo="libmpv", keep_open="yes")
         self._ctx = None
-        self._ctx_opengl_params = {'get_proc_address': MpvGlGetProcAddressFn(_get_process_address)}
+        self._ctx_opengl_params = {'get_proc_address': MpvGlGetProcAddressFn(GetProcAddressGetter().wrap)}
 
     def on_realize(self, *_):
         self.make_current()
@@ -71,6 +67,42 @@ class MyRenderer(Gtk.GLArea):
 
     def play(self, file):
         self._mpv.play(file)
+
+
+class GetProcAddressGetter:
+
+    def __init__(self):
+        self._func = self._find_platform_wrapper()
+
+    def _find_platform_wrapper(self):
+        return self._init_linux()
+
+    def _init_linux(self):
+        try:
+            from OpenGL import GLX
+            return self._glx_impl
+        except AttributeError:
+            pass
+        try:
+            from OpenGL import EGL
+            return self._egl_impl
+        except AttributeError:
+            pass
+        raise 'Cannot initialize OpenGL'
+
+    def wrap(self, _, name: bytes):
+        address = self._func(name)
+        return ctypes.cast(address, ctypes.c_void_p).value
+
+    @staticmethod
+    def _glx_impl(name: bytes):
+        from OpenGL import GLX
+        return GLX.glXGetProcAddress(name.decode("utf-8"))
+
+    @staticmethod
+    def _egl_impl(name: bytes):
+        from OpenGL import EGL
+        return EGL.eglGetProcAddress(name.decode("utf-8"))
 
 
 if __name__ == '__main__':
