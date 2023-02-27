@@ -85,8 +85,7 @@ class MyRenderer(Gtk.GLArea):
         fbo = GL.glGetIntegerv(GL.GL_DRAW_FRAMEBUFFER_BINDING)
         self._ctx.render(
             flip_y=True,
-            opengl_fbo={'w': width, 'h': height, 'fbo': fbo},
-            block_for_target_time=False
+            opengl_fbo={'w': width, 'h': height, 'fbo': fbo}
         )
 
     def play(self, file):
