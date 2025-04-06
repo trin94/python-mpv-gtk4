@@ -27,21 +27,20 @@ import sys
 
 import gi
 
-gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, GLib
-from OpenGL import GL
-from mpv import MPV, MpvGlGetProcAddressFn, MpvRenderContext
+gi.require_version("Gtk", "4.0")  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
+from mpv import MPV, MpvGlGetProcAddressFn, MpvRenderContext  # noqa: E402
+from OpenGL import GL  # noqa: E402
 
 
 class MyApplication(Gtk.Application):
-
     def __init__(self):
-        super().__init__(application_id='org.example.App')
+        super().__init__(application_id="org.example.App")
         self.renderer = MyRenderer()
         self.renderer.connect("realize", self.on_renderer_ready)
 
     def on_renderer_ready(self, *_):
-        self.renderer.play('test.webm')
+        self.renderer.play("test.webm")
 
     def do_activate(self):
         win = self.props.active_window
@@ -53,7 +52,6 @@ class MyApplication(Gtk.Application):
 
 
 class MyRenderer(Gtk.GLArea):
-
     def __init__(self, **properties):
         super().__init__(**properties)
         self.set_auto_render(False)
@@ -61,11 +59,11 @@ class MyRenderer(Gtk.GLArea):
 
         self._mpv = MPV(vo="libmpv", keep_open="yes")
         self._ctx = None
-        self._ctx_opengl_params = {'get_proc_address': MpvGlGetProcAddressFn(GetProcAddressGetter().wrap)}
+        self._ctx_opengl_params = {"get_proc_address": MpvGlGetProcAddressFn(GetProcAddressGetter().wrap)}
 
     def on_realize(self, *_):
         self.make_current()
-        self._ctx = MpvRenderContext(self._mpv, 'opengl', opengl_init_params=self._ctx_opengl_params)
+        self._ctx = MpvRenderContext(self._mpv, "opengl", opengl_init_params=self._ctx_opengl_params)
         self._ctx.update_cb = self.on_mpv_callback
 
     def on_mpv_callback(self):
@@ -83,17 +81,13 @@ class MyRenderer(Gtk.GLArea):
         width = self.get_width() * factor
         height = self.get_height() * factor
         fbo = GL.glGetIntegerv(GL.GL_DRAW_FRAMEBUFFER_BINDING)
-        self._ctx.render(
-            flip_y=True,
-            opengl_fbo={'w': width, 'h': height, 'fbo': fbo}
-        )
+        self._ctx.render(flip_y=True, opengl_fbo={"w": width, "h": height, "fbo": fbo}, block_for_target_time=False)
 
     def play(self, file):
         self._mpv.play(file)
 
 
 class GetProcAddressGetter:
-
     def __init__(self):
         self._func = self._find_platform_wrapper()
 
@@ -102,16 +96,18 @@ class GetProcAddressGetter:
 
     def _init_linux(self):
         try:
-            from OpenGL import GLX
+            from OpenGL import GLX  # noqa
+
             return self._glx_impl
         except AttributeError:
             pass
         try:
-            from OpenGL import EGL
+            from OpenGL import EGL  # noqa
+
             return self._egl_impl
         except AttributeError:
             pass
-        raise 'Cannot initialize OpenGL'
+        raise "Cannot initialize OpenGL"
 
     def wrap(self, _, name: bytes):
         address = self._func(name)
@@ -120,13 +116,15 @@ class GetProcAddressGetter:
     @staticmethod
     def _glx_impl(name: bytes):
         from OpenGL import GLX
+
         return GLX.glXGetProcAddress(name.decode("utf-8"))
 
     @staticmethod
     def _egl_impl(name: bytes):
         from OpenGL import EGL
+
         return EGL.eglGetProcAddress(name.decode("utf-8"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(MyApplication().run(sys.argv))
