@@ -1,0 +1,17 @@
+[project]
+name = "python-mpv-gtk4"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "mpv>=1.0.7",
+    "numpy>=2.2.4",
+    "PyGObject>=3.52.3",
+    "PyOpenGl>=3.1.9",
+]
+
+[dependency-groups]
+dev = [
+    "pygobject-stubs>=2.13.0",
+]
