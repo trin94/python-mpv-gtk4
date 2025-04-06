@@ -80,8 +80,8 @@ class MyRenderer(Gtk.GLArea):
             return False
 
         factor = self.get_scale_factor()
-        width = self.get_allocated_width() * factor
-        height = self.get_allocated_height() * factor
+        width = self.get_width() * factor
+        height = self.get_height() * factor
         fbo = GL.glGetIntegerv(GL.GL_DRAW_FRAMEBUFFER_BINDING)
         self._ctx.render(
             flip_y=True,
