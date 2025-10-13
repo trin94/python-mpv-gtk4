@@ -24,6 +24,11 @@
    just run
    ```
 
+## Install Notes
+
+* If installing PyGObject fails make sure to have cairo dependencies installed:
+  * On Fedora: `sudo dnf install cairo-devel cairo-gobject-devel`
+
 ## License
 
 **Video File is not covered by LICENSE**

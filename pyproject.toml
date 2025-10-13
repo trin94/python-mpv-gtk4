@@ -5,16 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "mpv>=1.0.7",
-    "numpy>=2.2.4",
-    "PyGObject>=3.52.3",
-    "PyOpenGl>=3.1.9",
+    "mpv>=1.0.8",
+    "numpy>=2.3.3",
+    "PyGObject>=3.54.3",
+    "PyOpenGl>=3.1.10",
 ]
 
 [dependency-groups]
 dev = [
     "pygobject-stubs>=2.13.0",
-    "ruff>=0.11.4"
+    "ruff>=0.14.0"
 ]
 
 [tool.ruff]
