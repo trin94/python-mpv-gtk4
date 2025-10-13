@@ -1,3 +1,6 @@
+This repository is now READONLY. For the latest version, please refer to this gist:
+https://gist.github.com/trin94/3381395adc8b2c3fea81a38b9a385369
+
 # python-mpv + GTK Example
 
 ## Development Setup
