@@ -40,7 +40,7 @@ class MyRenderer(Gtk.GLArea):
 
         self._mpv = MPV(vo="libmpv", keep_open="yes")
         self._ctx = None
-        self._ctx_opengl_params = {"get_proc_address": MpvGlGetProcAddressFn(GetProcAddressGetter().wrap)}
+        self._ctx_opengl_params = {"get_proc_address": MpvGlGetProcAddressFn(get_proc_address_wrapper())}
 
     def on_realize(self, *_):
         self.make_current()
@@ -63,48 +63,48 @@ class MyRenderer(Gtk.GLArea):
         height = self.get_height() * factor
         fbo = GL.glGetIntegerv(GL.GL_DRAW_FRAMEBUFFER_BINDING)
         self._ctx.render(flip_y=True, opengl_fbo={"w": width, "h": height, "fbo": fbo})
+        return True
 
     def play(self, file):
         self._mpv.play(file)
 
 
-class GetProcAddressGetter:
-    def __init__(self):
-        self._func = self._find_platform_wrapper()
-
-    def _find_platform_wrapper(self):
-        return self._init_linux()
-
-    def _init_linux(self):
-        try:
-            from OpenGL import GLX  # noqa
-
-            return self._glx_impl
-        except AttributeError:
-            pass
-        try:
-            from OpenGL import EGL  # noqa
-
-            return self._egl_impl
-        except AttributeError:
-            pass
-        raise "Cannot initialize OpenGL"
-
-    def wrap(self, _, name: bytes):
-        address = self._func(name)
-        return ctypes.cast(address, ctypes.c_void_p).value
-
-    @staticmethod
-    def _glx_impl(name: bytes):
+def get_proc_address_wrapper():
+    def glx_impl(name: bytes):
         from OpenGL import GLX
 
         return GLX.glXGetProcAddress(name.decode("utf-8"))
 
-    @staticmethod
-    def _egl_impl(name: bytes):
+    def egl_impl(name: bytes):
         from OpenGL import EGL
 
         return EGL.eglGetProcAddress(name.decode("utf-8"))
+
+    platform_func = None
+
+    try:
+        from OpenGL import GLX  # noqa
+
+        platform_func = glx_impl
+    except (AttributeError, ImportError):
+        pass
+
+    if platform_func is None:
+        try:
+            from OpenGL import EGL  # noqa
+
+            platform_func = egl_impl
+        except (AttributeError, ImportError):
+            pass
+
+    if platform_func is None:
+        raise RuntimeError("Cannot initialize OpenGL")
+
+    def wrapper(_, name: bytes):
+        address = platform_func(name)
+        return ctypes.cast(address, ctypes.c_void_p).value
+
+    return wrapper
 
 
 if __name__ == "__main__":
